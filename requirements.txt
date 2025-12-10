@@ -1,0 +1,10 @@
+This is a React/Vite project. Please use 'npm install' to install dependencies from package.json.
+
+Key Dependencies:
+- react
+- react-dom
+- react-router-dom
+- lucide-react
+- recharts
+- tailwindcss
+- vite
