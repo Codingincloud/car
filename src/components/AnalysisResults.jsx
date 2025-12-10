@@ -1,85 +1,73 @@
 import React from 'react';
-import { BarChart3, Leaf, AlertCircle, Lightbulb, Sparkles } from 'lucide-react';
+import { BarChart3, Leaf, AlertCircle, Lightbulb, Trophy, Share2 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { motion } from 'framer-motion';
+import { getRating } from '../utils/calculator';
 
 const AnalysisResults = ({ results }) => {
     if (!results) {
         return (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 h-full flex flex-col items-center justify-center text-center space-y-4">
-                <div className="bg-gray-100 p-4 rounded-full">
-                    <BarChart3 className="w-8 h-8 text-gray-400" />
+            <div className="glass h-full flex flex-col items-center justify-center text-center p-8 rounded-3xl border-none">
+                <div className="bg-white/5 p-6 rounded-full mb-4 animate-pulse">
+                    <BarChart3 className="w-12 h-12 text-text-muted" />
                 </div>
-                <div>
-                    <h3 className="text-lg font-semibold text-charcoal-dark">No Data Yet</h3>
-                    <p className="text-charcoal-light text-sm mt-1">
-                        Fill in your daily activities and click calculate to see your carbon footprint analysis.
-                    </p>
-                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Awaiting Data</h3>
+                <p className="text-text-muted max-w-xs">
+                    Complete the activity tracker to reveal your carbon footprint analysis.
+                </p>
             </div>
         );
     }
 
-    const total = results.total || 0;
-    const breakdown = results.breakdown || {};
-
-    // Updated rating logic
-    let rating = 'Moderate Impact';
-    let colorClass = 'text-yellow-600 bg-yellow-50 border-yellow-200';
-
-    if (total < 5) {
-        rating = 'Low Impact';
-        colorClass = 'text-green-600 bg-green-50 border-green-200';
-    } else if (total > 15) {
-        rating = 'High Impact';
-        colorClass = 'text-red-600 bg-red-50 border-red-200';
-    }
+    const { total, breakdown } = results;
+    const rating = getRating(total);
 
     const data = [
-        { name: 'Transport', value: breakdown.transport || 0, color: '#3B82F6' }, // Blue
-        { name: 'Food', value: breakdown.food || 0, color: '#10B981' },      // Green
-        { name: 'Energy', value: breakdown.energy || 0, color: '#F59E0B' },    // Yellow
+        { name: 'Transport', value: breakdown.transport || 0, color: '#3B82F6' },
+        { name: 'Food', value: breakdown.food || 0, color: '#10B981' },
+        { name: 'Energy', value: breakdown.energy || 0, color: '#F59E0B' },
     ].filter(item => item.value > 0);
 
-    // AI Insights Logic
-    let highestCategory = 'transport';
-    let maxVal = 0;
-    Object.entries(breakdown).forEach(([key, val]) => {
-        if (val > maxVal) {
-            maxVal = val;
-            highestCategory = key;
-        }
-    });
-
-    const recommendations = {
-        transport: [
-            "Consider carpooling or using ride-share apps to halve your commute emissions.",
-            "For short trips under 5km, biking or walking produces zero emissions.",
-            "Check if your route is serviced by an express bus or train line."
-        ],
-        food: [
-            "Try 'Meatless Mondays' to reduce your dietary carbon footprint by ~15%.",
-            "Source seasonal and local produce to cut down on transportation emissions.",
-            "Reduce food waste by planning meals ahead; composting helps too!"
-        ],
-        energy: [
-            "Switch to LED bulbs; they use 75% less energy than incandescent lighting.",
-            "Unplug electronics when not in use to eliminate 'vampire' power drain.",
-            "Adjust your thermostat by 1°C; it can save up to 10% on your energy bill."
-        ]
-    };
-
-    const currentRecommendations = recommendations[highestCategory] || recommendations.transport;
-
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-full flex flex-col overflow-y-auto">
-            <h2 className="text-xl font-bold text-charcoal-dark mb-6 flex items-center gap-2">
-                <Leaf className="w-5 h-5 text-primary" />
-                Analysis Results
-            </h2>
+        <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass h-full flex flex-col p-6 rounded-3xl border-none overflow-y-auto custom-scrollbar"
+        >
+            <div className="flex items-center justify-between mb-8">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <Leaf className="w-5 h-5 text-primary" />
+                    <span className="text-glow">Analysis</span>
+                </h2>
+                <button className="p-2 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors">
+                    <Share2 className="w-4 h-4" />
+                </button>
+            </div>
 
-            <div className="flex-1 flex flex-col gap-6">
-                {/* Donut Chart */}
-                <div className="h-64 w-full shrink-0">
+            <div className="flex-1 flex flex-col gap-8">
+                {/* Score Card */}
+                <div className="text-center relative py-8">
+                    <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent rounded-2xl blur-xl" />
+                    <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                        className="relative"
+                    >
+                        <span className="text-6xl font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+                            {total}
+                        </span>
+                        <span className="text-xl text-primary font-bold ml-2">kg CO₂e</span>
+                    </motion.div>
+
+                    <div className={`mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full border ${rating.bg} ${rating.border} ${rating.color}`}>
+                        <Trophy className="w-4 h-4" />
+                        <span className="text-sm font-bold uppercase tracking-wider">{rating.label}</span>
+                    </div>
+                </div>
+
+                {/* Chart */}
+                <div className="h-64 w-full relative">
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                             <Pie
@@ -90,64 +78,52 @@ const AnalysisResults = ({ results }) => {
                                 outerRadius={80}
                                 paddingAngle={5}
                                 dataKey="value"
+                                stroke="none"
                             >
                                 {data.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={entry.color} />
                                 ))}
                             </Pie>
                             <Tooltip
-                                formatter={(value) => `${value.toFixed(1)} kg`}
-                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                contentStyle={{ backgroundColor: '#1e293b', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                                itemStyle={{ color: '#fff' }}
                             />
-                            <Legend verticalAlign="bottom" height={36} />
+                            <Legend verticalAlign="bottom" height={36} formatter={(value) => <span className="text-white/70 ml-1">{value}</span>} />
                         </PieChart>
                     </ResponsiveContainer>
-                </div>
 
-                {/* Impact Rating Badge */}
-                <div className="text-center shrink-0">
-                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border ${colorClass} transition-colors duration-300`}>
-                        <AlertCircle className="w-5 h-5" />
-                        <span className="font-bold">{rating}</span>
-                    </div>
-                </div>
-
-                {/* Total Score Card */}
-                <div className="text-center p-6 bg-gray-50 rounded-xl border border-gray-100 shrink-0">
-                    <p className="text-sm text-charcoal-light font-medium uppercase tracking-wide">Total Daily Footprint</p>
-                    <div className="mt-2 flex items-baseline justify-center gap-1">
-                        <span className="text-4xl font-bold text-charcoal-dark">{total.toFixed(1)}</span>
-                        <span className="text-lg text-charcoal-light">kg CO₂e</span>
-                    </div>
-                </div>
-
-                {/* AI Insights Card */}
-                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-charcoal-dark to-charcoal p-6 text-white shadow-lg shrink-0">
-                    <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-primary/20 blur-2xl"></div>
-                    <div className="absolute bottom-0 left-0 -mb-4 -ml-4 h-24 w-24 rounded-full bg-blue-500/20 blur-2xl"></div>
-
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
-                                <Lightbulb className="w-5 h-5 text-yellow-300" />
-                            </div>
-                            <h3 className="font-bold text-lg flex items-center gap-2">
-                                AI Insights <Sparkles className="w-4 h-4 text-primary-light animate-pulse" />
-                            </h3>
-                        </div>
-
-                        <div className="space-y-3">
-                            {currentRecommendations.map((rec, index) => (
-                                <div key={index} className="flex gap-3 text-sm text-gray-200">
-                                    <span className="text-primary-light">•</span>
-                                    <span>{rec}</span>
-                                </div>
-                            ))}
+                    {/* Center Text in Donut */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="text-center">
+                            <div className="text-xs text-text-muted uppercase tracking-wider">Breakdown</div>
                         </div>
                     </div>
+                </div>
+
+                {/* AI Insights */}
+                <div className="glass-card p-5 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Lightbulb className="w-24 h-24 text-yellow-400 rotate-12" />
+                    </div>
+
+                    <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                        <span className="w-1 h-6 bg-primary rounded-full" />
+                        Quick Tips
+                    </h3>
+
+                    <ul className="space-y-3 relative z-10">
+                        <li className="flex gap-3 text-sm text-gray-300">
+                            <span className="text-primary mt-0.5">•</span>
+                            <span>Switching to a vegetarian diet effectively halves your food-related emissions.</span>
+                        </li>
+                        <li className="flex gap-3 text-sm text-gray-300">
+                            <span className="text-primary mt-0.5">•</span>
+                            <span>Driving an EV charged with renewables can reduce transport emissions by ~90%.</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

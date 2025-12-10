@@ -1,81 +1,87 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ActivityTracker from './ActivityTracker';
 import AnalysisResults from './AnalysisResults';
-import { Leaf } from 'lucide-react';
+import { Leaf, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { calculateFootprint } from '../utils/calculator';
+import { motion } from 'framer-motion';
 
 const Dashboard = () => {
   const [results, setResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const calculateFootprint = (data) => {
+  // Load saved data on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('carboncut_last_result');
+    if (saved) {
+      setResults(JSON.parse(saved));
+    }
+  }, []);
+
+  const handleCalculate = async (data) => {
     setIsLoading(true);
 
-    // Simulate AI processing delay
-    setTimeout(() => {
-      // Transport: Car (0.2), Public (0.05) per km
-      let transport = 0;
-      if (data.transport.km) {
-        const km = parseFloat(data.transport.km);
-        const factors = { car: 0.2, public: 0.05 };
-        transport = km * (factors[data.transport.type] || 0.2);
-      }
+    // Simulate complex calculation aka "AI Processing"
+    await new Promise(resolve => setTimeout(resolve, 800));
 
-      // Food: Meat (7), Veg (3) per day
-      const foodFactors = { meat: 7, vegetarian: 3 };
-      const food = foodFactors[data.food.type] || 3;
+    const result = calculateFootprint(data);
+    setResults(result);
+    localStorage.setItem('carboncut_last_result', JSON.stringify(result));
 
-      // Energy: Low (3), Medium (6), High (12)
-      const energyFactors = { low: 3, medium: 6, high: 12 };
-      const energy = energyFactors[data.energy.usage] || 6;
-
-      setResults({
-        total: transport + food + energy,
-        breakdown: {
-          transport,
-          food,
-          energy
-        }
-      });
-      setIsLoading(false);
-    }, 1500);
+    setIsLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white shadow-sm sticky top-0 z-10 shrink-0">
+    <div className="min-h-screen text-white selection:bg-primary/30">
+      {/* Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px]" />
+      </div>
+
+      <header className="fixed top-0 w-full z-50 glass border-b border-white/5 bg-black/10 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="bg-primary/10 p-2 rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/20 p-2.5 rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.3)]">
               <Leaf className="w-6 h-6 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold text-charcoal-dark">
-              Carbon<span className="text-primary">Cut</span>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Carbon<span className="text-primary text-glow">Cut</span>
             </h1>
           </div>
-          <div className="text-sm text-charcoal-light hidden sm:block">
-            Daily Analyzer
-          </div>
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 text-sm font-medium text-text-muted hover:text-white transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="hidden sm:inline">Exit</span>
+          </button>
         </div>
       </header>
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
-          <div className="lg:col-span-2">
-            <ActivityTracker onCalculate={calculateFootprint} isLoading={isLoading} />
-          </div>
+      <main className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto h-[calc(100vh-6rem)]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+          {/* Input Section */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="lg:col-span-7 h-full"
+          >
+            <ActivityTracker onCalculate={handleCalculate} isLoading={isLoading} />
+          </motion.div>
 
-          <div className="lg:col-span-1">
+          {/* Results Section */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+            className="lg:col-span-5 h-full"
+          >
             <AnalysisResults results={results} />
-          </div>
+          </motion.div>
         </div>
       </main>
-
-      <footer className="bg-white border-t border-gray-100 py-6 shrink-0">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-charcoal-light font-medium">Powered by CarbonCut AI</p>
-          <p className="text-xs text-gray-400 mt-1">© {new Date().getFullYear()} CarbonCut. All rights reserved.</p>
-        </div>
-      </footer>
     </div>
   );
 };
