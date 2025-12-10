@@ -2,118 +2,98 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
 
-const API_URL = 'http://localhost:3001/api';
-
+// SIMULATED AUTHENTICATION (No Backend)
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    const [token, setToken] = useState(localStorage.getItem('carboncut_token'));
     const [loading, setLoading] = useState(true);
 
-    // Check if user is authenticated on mount
     useEffect(() => {
-        const checkAuth = async () => {
-            if (token) {
-                try {
-                    const response = await fetch(`${API_URL}/auth/me`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
+        // Check local storage for existing session
+        const savedUser = localStorage.getItem('carboncut_user');
+        if (savedUser) {
+            setUser(JSON.parse(savedUser));
+        }
+        setLoading(false);
+    }, []);
 
-                    if (response.ok) {
-                        const data = await response.json();
-                        setUser(data.user);
-                    } else {
-                        // Token invalid, clear it
-                        localStorage.removeItem('carboncut_token');
-                        setToken(null);
-                        setUser(null);
-                    }
-                } catch (error) {
-                    console.error('Auth check failed:', error);
-                }
-            }
-            setLoading(false);
+    // Register function (Simulated)
+    const register = async (name, email, password) => {
+        // Mimic network delay
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        if (!name || !email || !password) {
+            return { success: false, error: 'All fields are required' };
+        }
+
+        const newUser = {
+            id: 'user_' + Math.random().toString(36).substr(2, 9),
+            name,
+            email,
+            joinDate: new Date().toISOString()
         };
 
-        checkAuth();
-    }, [token]);
-
-    // Register function
-    const register = async (name, email, password) => {
-        try {
-            const response = await fetch(`${API_URL}/auth/register`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ name, email, password })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Registration failed');
-            }
-
-            localStorage.setItem('carboncut_token', data.token);
-            setToken(data.token);
-            setUser(data.user);
-
-            return { success: true };
-        } catch (error) {
-            return { success: false, error: error.message };
-        }
+        setUser(newUser);
+        localStorage.setItem('carboncut_user', JSON.stringify(newUser));
+        return { success: true };
     };
 
-    // Login function
+    // Login function (Simulated)
     const login = async (email, password) => {
-        try {
-            const response = await fetch(`${API_URL}/auth/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email, password })
-            });
+        // Mimic network delay
+        await new Promise(resolve => setTimeout(resolve, 800));
 
-            const data = await response.json();
+        if (email && password) {
+            const existingUser = localStorage.getItem('carboncut_user');
+            let userData;
 
-            if (!response.ok) {
-                throw new Error(data.error || 'Login failed');
+            // If a user was previously created, try to match? 
+            // For simplicity in this demo, we'll just allow any login with data or create a mock session
+            // assuming if they have an account they would use it.
+            // But actually, let's just create a session based on the email provided.
+
+            if (existingUser) {
+                const parsed = JSON.parse(existingUser);
+                if (parsed.email === email) {
+                    userData = parsed;
+                } else {
+                    // Creating new session for new email for demo purposes
+                    userData = {
+                        id: 'user_' + Math.random().toString(36).substr(2, 9),
+                        name: email.split('@')[0],
+                        email: email,
+                        joinDate: new Date().toISOString()
+                    };
+                }
+            } else {
+                userData = {
+                    id: 'user_' + Math.random().toString(36).substr(2, 9),
+                    name: email.split('@')[0],
+                    email: email,
+                    joinDate: new Date().toISOString()
+                };
             }
 
-            localStorage.setItem('carboncut_token', data.token);
-            setToken(data.token);
-            setUser(data.user);
-
+            setUser(userData);
+            localStorage.setItem('carboncut_user', JSON.stringify(userData));
             return { success: true };
-        } catch (error) {
-            return { success: false, error: error.message };
         }
+
+        return { success: false, error: 'Invalid credentials' };
     };
 
     // Logout function
     const logout = () => {
-        localStorage.removeItem('carboncut_token');
-        setToken(null);
+        localStorage.removeItem('carboncut_user');
         setUser(null);
-    };
-
-    // Get auth headers for API calls
-    const getAuthHeaders = () => {
-        return token ? { 'Authorization': `Bearer ${token}` } : {};
     };
 
     const value = {
         user,
-        token,
         loading,
         isAuthenticated: !!user,
         register,
         login,
         logout,
-        getAuthHeaders
     };
 
     return (
