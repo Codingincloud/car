@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Car, Utensils, Home, Calculator, RotateCcw, Zap } from 'lucide-react';
+import { Car, Utensils, Home, Calculator, RotateCcw, Zap, Bike, Train, Leaf } from 'lucide-react';
 
 const ActivityTracker = ({ onCalculate, isLoading }) => {
     const [activeTab, setActiveTab] = useState('transport');
     const initialData = {
         transport: { km: '', type: 'car' },
         food: { type: 'meat' },
-        energy: { usage: 'medium' },
+        energy: { usage: 'medium', city: '' },
     };
     const [formData, setFormData] = useState(initialData);
 
@@ -29,178 +29,236 @@ const ActivityTracker = ({ onCalculate, isLoading }) => {
     };
 
     const tabs = [
-        { id: 'transport', label: 'Transport', icon: Car },
-        { id: 'food', label: 'Food', icon: Utensils },
-        { id: 'energy', label: 'Home Energy', icon: Home },
+        { id: 'transport', label: 'Transport', icon: Car, color: 'emerald' },
+        { id: 'food', label: 'Food', icon: Utensils, color: 'amber' },
+        { id: 'energy', label: 'Home Energy', icon: Home, color: 'teal' },
     ];
 
-    // Conditional classes for loading state
+    const transportOptions = [
+        { id: 'car', label: 'Car', icon: Car, emission: 'High' },
+        { id: 'public', label: 'Public Transport', icon: Train, emission: 'Low' },
+        { id: 'bike', label: 'Bicycle', icon: Bike, emission: 'Zero' },
+    ];
+
+    const foodOptions = [
+        { id: 'meat', label: 'Meat-heavy', desc: 'Includes red meat & poultry', impact: 'High' },
+        { id: 'vegetarian', label: 'Vegetarian', desc: 'Plant-based with dairy/eggs', impact: 'Medium' },
+        { id: 'vegan', label: 'Vegan', desc: 'Fully plant-based diet', impact: 'Low' },
+    ];
+
     const loadingInputClass = isLoading ? 'opacity-50 pointer-events-none' : '';
 
     return (
-        <div className="flex flex-col h-full bg-surface text-text-main">
-            <div className={`flex border-b border-white/5 overflow-x-auto bg-black/20 ${loadingInputClass}`}>
+        <div className="flex flex-col h-full">
+            {/* Tabs */}
+            <div className={`flex border-b border-white/5 bg-black/20 ${loadingInputClass}`}>
                 {tabs.map((tab) => {
                     const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
                     return (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             disabled={isLoading}
                             className={`flex-1 py-5 px-4 flex items-center justify-center gap-2 text-sm font-medium transition-all relative
-                ${activeTab === tab.id
-                                    ? 'text-primary bg-surface shadow-[0_-1px_2px_rgba(0,0,0,0.2)]'
-                                    : 'text-text-muted hover:text-white hover:bg-white/5'
+                                ${isActive
+                                    ? 'text-white bg-white/5'
+                                    : 'text-slate-400 hover:text-white hover:bg-white/5'
                                 }`}
                         >
-                            <Icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-primary' : 'text-gray-500'}`} />
-                            {tab.label}
-                            {activeTab === tab.id && (
-                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                            <Icon className={`w-4 h-4 ${isActive ? `text-${tab.color}-400` : ''}`} />
+                            <span className="hidden sm:inline">{tab.label}</span>
+                            {isActive && (
+                                <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-${tab.color}-400`} />
                             )}
                         </button>
                     );
                 })}
             </div>
 
-            <div className={`p-8 flex-1 overflow-y-auto ${loadingInputClass}`}>
+            {/* Tab Content */}
+            <div className={`p-6 md:p-8 flex-1 ${loadingInputClass}`}>
+                {/* Transport Tab */}
                 {activeTab === 'transport' && (
                     <div className="space-y-6 animate-fade-in">
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="p-3 bg-primary/10 rounded-xl border border-primary/20">
-                                <Car className="w-6 h-6 text-primary" />
+                            <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                                <Car className="w-6 h-6 text-emerald-400" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-bold">Transport Details</h3>
-                                <p className="text-sm text-text-muted">Track your daily commute impact.</p>
+                                <h3 className="text-lg font-bold text-white">Transport Details</h3>
+                                <p className="text-sm text-slate-400">Track your daily commute impact</p>
                             </div>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-5">
                             <div>
-                                <label className="block text-sm font-semibold text-text-muted mb-2">Distance (km)</label>
+                                <label className="block text-sm font-semibold text-slate-300 mb-2">
+                                    Distance Traveled (km)
+                                </label>
                                 <input
                                     type="number"
                                     value={formData.transport.km}
                                     onChange={(e) => handleInputChange('transport', 'km', e.target.value)}
                                     disabled={isLoading}
-                                    className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-white placeholder-gray-600"
+                                    className="input-field"
                                     placeholder="e.g. 20"
                                 />
                             </div>
+
                             <div>
-                                <label className="block text-sm font-semibold text-text-muted mb-2">Mode of Transport</label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    {['car', 'public'].map((type) => (
-                                        <button
-                                            key={type}
-                                            onClick={() => handleInputChange('transport', 'type', type)}
-                                            disabled={isLoading}
-                                            className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all ${formData.transport.type === type
-                                                ? 'border-primary bg-primary/10 text-primary'
-                                                : 'border-white/10 bg-background hover:border-white/20 text-text-muted'
-                                                }`}
-                                        >
-                                            {type === 'car' ? 'Car' : 'Public Transport'}
-                                        </button>
-                                    ))}
+                                <label className="block text-sm font-semibold text-slate-300 mb-3">
+                                    Mode of Transport
+                                </label>
+                                <div className="grid grid-cols-3 gap-3">
+                                    {transportOptions.map((option) => {
+                                        const Icon = option.icon;
+                                        const isSelected = formData.transport.type === option.id;
+                                        return (
+                                            <button
+                                                key={option.id}
+                                                onClick={() => handleInputChange('transport', 'type', option.id)}
+                                                disabled={isLoading}
+                                                className={`p-4 rounded-xl border text-center transition-all ${isSelected
+                                                        ? 'border-emerald-500/50 bg-emerald-500/10'
+                                                        : 'border-white/10 bg-white/5 hover:border-white/20'
+                                                    }`}
+                                            >
+                                                <Icon className={`w-6 h-6 mx-auto mb-2 ${isSelected ? 'text-emerald-400' : 'text-slate-400'}`} />
+                                                <div className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                                                    {option.label}
+                                                </div>
+                                                <div className={`text-xs mt-1 ${option.emission === 'Zero' ? 'text-emerald-400' :
+                                                        option.emission === 'Low' ? 'text-teal-400' :
+                                                            'text-amber-400'
+                                                    }`}>
+                                                    {option.emission} Impact
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
                     </div>
                 )}
 
+                {/* Food Tab */}
                 {activeTab === 'food' && (
                     <div className="space-y-6 animate-fade-in">
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="p-3 bg-accent/10 rounded-xl border border-accent/20">
-                                <Utensils className="w-6 h-6 text-accent" />
+                            <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20">
+                                <Utensils className="w-6 h-6 text-amber-400" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-bold">Daily Diet</h3>
-                                <p className="text-sm text-text-muted">What did you eat today?</p>
+                                <h3 className="text-lg font-bold text-white">Daily Diet</h3>
+                                <p className="text-sm text-slate-400">What did you eat today?</p>
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-semibold text-text-muted mb-3">Diet Type</label>
-                            <div className="grid grid-cols-1 gap-3">
-                                {[
-                                    { id: 'meat', label: 'Meat-heavy', desc: 'Includes red meat & poultry' },
-                                    { id: 'vegetarian', label: 'Vegetarian', desc: 'Plant-based with dairy/eggs' }
-                                ].map((option) => (
-                                    <button
-                                        key={option.id}
-                                        onClick={() => handleInputChange('food', 'type', option.id)}
-                                        disabled={isLoading}
-                                        className={`flex items-center justify-between p-4 rounded-xl border transition-all text-left ${formData.food.type === option.id
-                                            ? 'border-accent bg-accent/10 shadow-sm'
-                                            : 'border-white/10 bg-background hover:border-white/20'
-                                            }`}
-                                    >
-                                        <div>
-                                            <div className={`font-semibold ${formData.food.type === option.id ? 'text-accent' : 'text-text-main'}`}>
-                                                {option.label}
+                            <label className="block text-sm font-semibold text-slate-300 mb-3">Diet Type</label>
+                            <div className="space-y-3">
+                                {foodOptions.map((option) => {
+                                    const isSelected = formData.food.type === option.id;
+                                    return (
+                                        <button
+                                            key={option.id}
+                                            onClick={() => handleInputChange('food', 'type', option.id)}
+                                            disabled={isLoading}
+                                            className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all text-left ${isSelected
+                                                    ? 'border-amber-500/50 bg-amber-500/10'
+                                                    : 'border-white/10 bg-white/5 hover:border-white/20'
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isSelected ? 'bg-amber-500/20' : 'bg-white/5'
+                                                    }`}>
+                                                    {option.id === 'vegan' ? (
+                                                        <Leaf className={`w-5 h-5 ${isSelected ? 'text-amber-400' : 'text-slate-400'}`} />
+                                                    ) : (
+                                                        <Utensils className={`w-5 h-5 ${isSelected ? 'text-amber-400' : 'text-slate-400'}`} />
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <div className={`font-semibold ${isSelected ? 'text-white' : 'text-slate-200'}`}>
+                                                        {option.label}
+                                                    </div>
+                                                    <div className="text-xs text-slate-400 mt-0.5">{option.desc}</div>
+                                                </div>
                                             </div>
-                                            <div className="text-xs text-text-muted mt-0.5">{option.desc}</div>
-                                        </div>
-                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${formData.food.type === option.id ? 'border-accent' : 'border-gray-600'
-                                            }`}>
-                                            {formData.food.type === option.id && <div className="w-2.5 h-2.5 rounded-full bg-accent" />}
-                                        </div>
-                                    </button>
-                                ))}
+                                            <div className="flex items-center gap-3">
+                                                <span className={`text-xs font-medium px-2 py-1 rounded-full ${option.impact === 'Low' ? 'bg-emerald-500/20 text-emerald-400' :
+                                                        option.impact === 'Medium' ? 'bg-amber-500/20 text-amber-400' :
+                                                            'bg-red-500/20 text-red-400'
+                                                    }`}>
+                                                    {option.impact}
+                                                </span>
+                                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-amber-400' : 'border-slate-600'
+                                                    }`}>
+                                                    {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />}
+                                                </div>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
                 )}
 
+                {/* Energy Tab */}
                 {activeTab === 'energy' && (
                     <div className="space-y-6 animate-fade-in">
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="p-3 bg-secondary/10 rounded-xl border border-secondary/20">
-                                <Home className="w-6 h-6 text-secondary" />
+                            <div className="p-3 bg-teal-500/10 rounded-xl border border-teal-500/20">
+                                <Home className="w-6 h-6 text-teal-400" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-bold">Home Energy</h3>
-                                <p className="text-sm text-text-muted">Electricity usage estimation.</p>
+                                <h3 className="text-lg font-bold text-white">Home Energy</h3>
+                                <p className="text-sm text-slate-400">Electricity usage estimation</p>
                             </div>
                         </div>
 
                         <div className="space-y-6">
                             <div>
-                                <label className="block text-sm font-semibold text-text-muted mb-3">Usage Level</label>
-                                <div className="flex gap-2">
-                                    {['low', 'medium', 'high'].map((level) => (
-                                        <button
-                                            key={level}
-                                            onClick={() => handleInputChange('energy', 'usage', level)}
-                                            disabled={isLoading}
-                                            className={`flex-1 py-3 rounded-xl border text-sm font-medium capitalize transition-all ${formData.energy.usage === level
-                                                ? 'border-secondary bg-secondary/10 text-secondary'
-                                                : 'border-white/10 bg-background hover:border-white/20 text-text-muted'
-                                                }`}
-                                        >
-                                            {level}
-                                        </button>
-                                    ))}
+                                <label className="block text-sm font-semibold text-slate-300 mb-3">Usage Level</label>
+                                <div className="grid grid-cols-3 gap-3">
+                                    {['low', 'medium', 'high'].map((level) => {
+                                        const isSelected = formData.energy.usage === level;
+                                        return (
+                                            <button
+                                                key={level}
+                                                onClick={() => handleInputChange('energy', 'usage', level)}
+                                                disabled={isLoading}
+                                                className={`py-4 rounded-xl border text-sm font-medium capitalize transition-all ${isSelected
+                                                        ? 'border-teal-500/50 bg-teal-500/10 text-teal-400'
+                                                        : 'border-white/10 bg-white/5 hover:border-white/20 text-slate-300'
+                                                    }`}
+                                            >
+                                                {level}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
 
                             {formData.energy.usage === 'high' && (
-                                <div className="animate-slide-up bg-background p-4 rounded-xl border border-white/10">
-                                    <label className="block text-sm font-semibold text-text-muted mb-2">City / Location</label>
+                                <div className="animate-slide-up p-4 rounded-xl border border-teal-500/20 bg-teal-500/5">
+                                    <label className="block text-sm font-semibold text-slate-300 mb-2">
+                                        City / Location
+                                    </label>
                                     <input
                                         type="text"
                                         value={formData.energy.city || ''}
                                         onChange={(e) => handleInputChange('energy', 'city', e.target.value)}
                                         disabled={isLoading}
-                                        className="w-full px-4 py-3 bg-surface border border-white/10 rounded-lg focus:ring-2 focus:ring-secondary/50 focus:border-secondary outline-none transition-all text-white placeholder-gray-600"
+                                        className="input-field"
                                         placeholder="e.g. Boston"
                                     />
-                                    <p className="text-xs text-secondary mt-2 flex items-center gap-1">
+                                    <p className="text-xs text-teal-400 mt-3 flex items-center gap-1">
                                         <Zap className="w-3 h-3" />
-                                        Checking local grid carbon intensity...
+                                        We'll check your local grid carbon intensity for personalized tips
                                     </p>
                                 </div>
                             )}
@@ -209,11 +267,12 @@ const ActivityTracker = ({ onCalculate, isLoading }) => {
                 )}
             </div>
 
+            {/* Action Buttons */}
             <div className="p-6 border-t border-white/5 bg-black/20 flex gap-4">
                 <button
                     onClick={handleReset}
                     disabled={isLoading}
-                    className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-text-muted bg-background border border-white/10 hover:bg-white/5 hover:text-white transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="btn-secondary"
                 >
                     <RotateCcw className="w-4 h-4" />
                     Reset
@@ -221,7 +280,7 @@ const ActivityTracker = ({ onCalculate, isLoading }) => {
                 <button
                     onClick={handleSubmit}
                     disabled={isLoading}
-                    className="flex-1 flex items-center justify-center gap-2 bg-primary text-white py-3.5 px-6 rounded-xl font-semibold hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-90 disabled:cursor-not-allowed disabled:transform-none"
+                    className="flex-1 btn-primary"
                 >
                     {isLoading ? (
                         <div className="loader-dots text-white">

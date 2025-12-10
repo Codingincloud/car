@@ -1,0 +1,11 @@
+[
+  {
+    "id": "3aa69a09-5eb7-42f4-b98b-901955012d01",
+    "name": "Test User",
+    "email": "test@example.com",
+    "password": "$2b$10$ZjCcdb421y3uhLLDUuhdyOxHaEaLFgmoaW9EwzwX.vCqRV6do1DRK",
+    "createdAt": "2025-12-10T13:26:32.789Z",
+    "level": 2,
+    "totalPoints": 180
+  }
+]
